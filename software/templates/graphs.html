@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Graphs{% endblock %}
+
+{% block content %}
+<section class="graphs-page" aria-labelledby="graphs-title">
+    <header class="graphs-header">
+        <div>
+            <p class="eyebrow">LIVE SENSOR DATA</p>
+            <h1 id="graphs-title">Temperature &amp; Humidity</h1>
+            <p class="graphs-description">Recent readings from your Temp Control Heaters channel.</p>
+        </div>
+        <div class="live-indicator"><span aria-hidden="true"></span> Live</div>
+    </header>
+
+    <p class="graphs-status" id="graphs-status" role="status" aria-live="polite">
+        Connecting to the sensor feed...
+    </p>
+    <p class="graphs-error" id="graphs-error" role="alert" hidden></p>
+
+    <div class="chart-grid">
+        <article class="chart-card">
+            <h2>Temperature (&deg;C)</h2>
+            <div class="chart-canvas-wrap">
+                <canvas id="temperature-chart" aria-label="Live temperature chart" role="img"></canvas>
+            </div>
+        </article>
+        <article class="chart-card">
+            <h2>Humidity (%)</h2>
+            <div class="chart-canvas-wrap">
+                <canvas id="humidity-chart" aria-label="Live humidity chart" role="img"></canvas>
+            </div>
+        </article>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='graphs.js') }}" defer></script>
+{% endblock %}

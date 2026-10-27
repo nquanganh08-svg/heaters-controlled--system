@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{%block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <section class="admin-requests" aria-labelledby="admin-requests-title">
+        <div class="admin-requests-heading">
+            <div>
+                <p class="eyebrow">ACCESS MANAGEMENT</p>
+                <h2 id="admin-requests-title">Admin access requests</h2>
+            </div>
+            <span class="request-count">{{ pending_requests|length }} pending</span>
+        </div>
+
+        {% if pending_requests %}
+            <div class="request-list">
+                {% for admin_request in pending_requests %}
+                    <article class="request-card">
+                        <div class="request-details">
+                            <h3>{{ admin_request.full_name }} <span>({{ admin_request.username }})</span></h3>
+                            <p><a href="mailto:{{ admin_request.email }}">{{ admin_request.email }}</a></p>
+                            <p class="request-reason">{{ admin_request.reason }}</p>
+                            <p class="request-date">Submitted {{ admin_request.created_at }}</p>
+                        </div>
+                        <div class="request-actions">
+                            <form method="POST" action="{{ url_for('review_admin_request', request_id=admin_request.id, action='approve') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <button class="request-approve" type="submit">Approve</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('review_admin_request', request_id=admin_request.id, action='reject') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <button class="request-reject" type="submit">Reject</button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-requests">There are no pending admin access requests.</p>
+        {% endif %}
+    </section>
+
+    <section class="admin-requests" aria-labelledby="heater-requests-title">
+        <div class="admin-requests-heading">
+            <div>
+                <p class="eyebrow">STUDENT REQUESTS</p>
+                <h2 id="heater-requests-title">Heater requests</h2>
+            </div>
+            <span class="request-count">{{ pending_heater_requests|length }} pending</span>
+        </div>
+
+        {% if pending_heater_requests %}
+            <div class="request-list">
+                {% for heater_request in pending_heater_requests %}
+                    <article class="request-card heater-request-card">
+                        <div class="request-details">
+                            <h3>{{ heater_request.username }}</h3>
+                            <p class="request-reason">{{ heater_request.reason }}</p>
+                            <p class="request-date">Requested {{ heater_request.created_at }}</p>
+                        </div>
+                        <form class="heater-review-form" method="POST"
+                              action="{{ url_for('review_heater_request', request_id=heater_request.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <label for="heater-comment-{{ heater_request.id }}">Comment for student</label>
+                            <textarea id="heater-comment-{{ heater_request.id }}" name="comment"
+                                      maxlength="1000" rows="3" required></textarea>
+                            <div class="request-actions">
+                                <button class="request-approve" type="submit" name="action" value="approve">
+                                    Approve and turn on
+                                </button>
+                                <button class="request-reject" type="submit" name="action" value="reject">
+                                    Reject
+                                </button>
+                            </div>
+                        </form>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-requests">There are no pending heater requests.</p>
+        {% endif %}
+    </section>
+
+    <section class="heater-control" aria-labelledby="heater-control-title">
+        <div class="admin-requests-heading">
+            <div>
+                <p class="eyebrow">DEVICE CONTROL</p>
+                <h2 id="heater-control-title">Heater</h2>
+            </div>
+        </div>
+
+        <div class="heater-status">
+            <form class="heater-mode-form" method="POST" action="{{ url_for('heater_mode') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="mode-threshold-grid">
+                    <div class="login-field">
+                        <label for="admin-turn-on-below">Turn heater on below (°C)</label>
+                        <input id="admin-turn-on-below" name="turn_on_below" type="number"
+                               min="5" max="40" step="0.1"
+                               value="{{ heater_settings.turn_on_below }}" required>
+                    </div>
+                    <div class="login-field">
+                        <label for="admin-turn-off-above">Turn heater off above (°C)</label>
+                        <input id="admin-turn-off-above" name="turn_off_above" type="number"
+                               min="5" max="40" step="0.1"
+                               value="{{ heater_settings.turn_off_above }}" required>
+                    </div>
+                </div>
+                <p class="mode-threshold-note">
+                    Keep the off threshold at least 2 °C above the on threshold to prevent rapid switching.
+                </p>
+                <div class="heater-actions mode-actions">
+                    <button class="mode-select-button {% if heater_settings.mode == 'manual' %}mode-selected{% endif %}"
+                            type="submit" name="mode" value="manual">Manual</button>
+                    <button class="mode-select-button {% if heater_settings.mode == 'automatic' %}mode-selected{% endif %}"
+                            type="submit" name="mode" value="automatic">Automatic</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="heater-status">
+            <p>Last command:
+                {% if last_command %}
+                    <strong>{{ last_command.state|capitalize }}</strong>
+                    by {{ last_command.username }} at {{ last_command.created_at }}
+                    ({{ last_command.status }})
+                {% else %}
+                    <strong>None sent</strong>
+                {% endif %}
+            </p>
+            <p>LED state:
+                <strong>{{ led_state|default('unavailable', true)|capitalize }}</strong>
+            </p>
+            {% if waiting_for_device %}
+                <p class="heater-waiting" role="status">Waiting for device to report the commanded state.</p>
+            {% endif %}
+        </div>
+
+        <p id="heater-cooldown"
+           class="heater-cooldown"
+           data-remaining="{{ cooldown_seconds }}"
+           role="status"
+           aria-live="polite">
+            {% if cooldown_seconds %}
+                New command available in {{ cooldown_seconds }} seconds.
+            {% else %}
+                You can send a command now.
+            {% endif %}
+        </p>
+        {% if heater_settings.mode == "manual" %}
+            <div class="heater-actions">
+                <form method="POST" action="{{ url_for('control_heater') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button class="request-approve" type="submit" name="state" value="on"
+                            {% if cooldown_seconds %}disabled{% endif %}>Turn on</button>
+                </form>
+                <form method="POST" action="{{ url_for('control_heater') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button class="request-reject" type="submit" name="state" value="off"
+                            {% if cooldown_seconds %}disabled{% endif %}>Turn off</button>
+                </form>
+            </div>
+        {% else %}
+            <p class="heater-request-pending">
+                Automatic mode is active. Temperature thresholds control the heater.
+                <a href="{{ url_for('automatic_mode') }}">Open Automatic dashboard</a>
+            </p>
+        {% endif %}
+
+        <h3>Recent commands</h3>
+        {% if command_history %}
+            <div class="heater-history">
+                <table>
+                    <thead>
+                        <tr><th>Who</th><th>Command</th><th>Result</th><th>When</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for command in command_history %}
+                            <tr>
+                                <td>{{ command.username }}</td>
+                                <td>{{ command.state|capitalize }}</td>
+                                <td>{{ command.status|capitalize }}</td>
+                                <td>{{ command.created_at }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-requests">No heater commands have been sent.</p>
+        {% endif %}
+
+        <h3>Setting change log</h3>
+        {% if settings_log %}
+            <div class="heater-history">
+                <table>
+                    <thead>
+                        <tr><th>Admin</th><th>Time</th><th>Old values</th><th>New values</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in settings_log %}
+                            <tr>
+                                <td>{{ entry.username }}</td>
+                                <td>{{ entry.changed_at }}</td>
+                                <td>
+                                    {{ entry.old_mode|capitalize }} ·
+                                    {{ entry.old_low }}°C to {{ entry.old_high }}°C
+                                </td>
+                                <td>
+                                    {{ entry.new_mode|capitalize }} ·
+                                    {{ entry.new_low }}°C to {{ entry.new_high }}°C
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-requests">No heater setting changes have been recorded yet.</p>
+        {% endif %}
+    </section>
+
+    {% block scripts %}
+    <script>
+        (() => {
+            const countdown = document.getElementById("heater-cooldown");
+            const buttons = document.querySelectorAll(".heater-actions button");
+            let remaining = Number(countdown.dataset.remaining);
+
+            if (remaining <= 0) return;
+
+            const timer = window.setInterval(() => {
+                remaining -= 1;
+                if (remaining <= 0) {
+                    window.clearInterval(timer);
+                    countdown.textContent = "You can send a command now.";
+                    buttons.forEach((button) => { button.disabled = false; });
+                    return;
+                }
+                countdown.textContent =
+                    `New command available in ${remaining} seconds.`;
+            }, 1000);
+        })();
+    </script>
+    {% endblock %}
+
+    <section class="dashboard-hero">
+        <div class="hero-copy">
+            <p class="eyebrow">LIVE DATA DASHBOARD</p>
+            <h1>Administrator dashboard</h1>
+            <p class="hero-description">
+                Monitor your sensor dashboard, review readings, and explore
+                recent trends from one place.
+            </p>
+
+            <div class="hero-actions">
+                <a class="button button-primary" href="{{ url_for('dashboard') }}">
+                    View dashboard
+                </a>
+                <a class="button button-secondary" href="{{ url_for('graphs') }}">
+                    View graphs
+                </a>
+            </div>
+        </div>
+
+        <aside class="hero-tools">
+            <h2>Dashboard tools</h2>
+            <ul>
+                <li><span aria-hidden="true">↗</span> Check the live dashboard</li>
+                <li><span aria-hidden="true">▥</span> Review sensor graphs</li>
+                <li><span aria-hidden="true">⌂</span> Manage dashboard access</li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="dashboard-cards" aria-label="Dashboard sections">
+        <article class="dashboard-card">
+            <span class="card-icon" aria-hidden="true">↗</span>
+            <h2>Live dashboard</h2>
+            <p>Open the main page to view the current sensor dashboard.</p>
+            <a href="{{ url_for('dashboard') }}">Open dashboard</a>
+        </article>
+
+        <article class="dashboard-card">
+            <span class="card-icon" aria-hidden="true">▥</span>
+            <h2>Sensor graphs</h2>
+            <p>Explore the graphs page to review sensor data trends.</p>
+            <a href="{{ url_for('graphs') }}">View graphs</a>
+        </article>
+
+        <article class="dashboard-card">
+            <span class="card-icon" aria-hidden="true">⚙</span>
+            <h2>Administrator panel</h2>
+            <p>You’re on the admin page. Use the navigation to visit other sections.</p>
+            <a href="{{ url_for('dashboard') }}">Return to dashboard</a>
+        </article>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Student Directory{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <section class="admin-requests" aria-labelledby="student-directory-title">
+        <div class="admin-requests-heading">
+            <div>
+                <p class="eyebrow">STUDENT MANAGEMENT</p>
+                <h1 id="student-directory-title">Students by boarding house</h1>
+            </div>
+            <span class="request-count">
+                {{ students_by_house.values()|map('length')|sum }} students
+            </span>
+        </div>
+
+        <details class="student-create-panel">
+            <summary class="student-create-button">Add student account</summary>
+            <form class="student-account-form" method="POST" action="{{ url_for('create_student') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="student-form-grid">
+                    <div class="login-field">
+                        <label for="student-name">Student name</label>
+                        <input id="student-name" name="full_name" type="text" maxlength="120"
+                               autocomplete="name" required>
+                    </div>
+                    <div class="login-field">
+                        <label for="year_group">Year group</label>
+                        <input id="year_group" name="year_group" type="text" maxlength="30"
+                               placeholder="e.g. Year 10" required>
+                    </div>
+                    <div class="login-field">
+                        <label for="date_of_birth">Date of birth</label>
+                        <input id="date_of_birth" name="date_of_birth" type="date" required>
+                    </div>
+                    <div class="login-field">
+                        <label for="boarding_house">Boarding house</label>
+                        <select id="boarding_house" name="boarding_house" required>
+                            <option value="">Choose a house</option>
+                            {% for house in boarding_houses %}
+                                <option value="{{ house }}">{{ house }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="login-field">
+                        <label for="has_roommate">Has a roommate?</label>
+                        <select id="has_roommate" name="has_roommate" required>
+                            <option value="">Choose yes or no</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    <div class="login-field">
+                        <label for="room">Room</label>
+                        <input id="room" name="room" type="text" maxlength="30" required>
+                    </div>
+                    <div class="login-field">
+                        <label for="nationality">Nationality</label>
+                        <input id="nationality" name="nationality" type="text" maxlength="100" required>
+                    </div>
+                </div>
+                <button class="request-approve student-create-button" type="submit">
+                    Create student account
+                </button>
+            </form>
+        </details>
+
+        <div class="student-house-list">
+            {% for house in boarding_houses %}
+                {% set house_students = students_by_house[house] %}
+                <details class="student-house">
+                    <summary>
+                        <span>{{ house }}</span>
+                        <span class="request-count">{{ house_students|length }} students</span>
+                    </summary>
+                    {% if house_students %}
+                        <div class="heater-history student-list">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th><th>Username</th><th>Year</th><th>Age</th><th>Roommate</th>
+                                        <th>Room</th><th>Nationality</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in house_students %}
+                                        <tr>
+                                            <td>{{ student.full_name or student.username }}</td>
+                                            <td>{{ student.username }}</td>
+                                            <td>{{ student.year_group }}</td>
+                                            <td>{{ student.age }}</td>
+                                            <td>{{ "Yes" if student.has_roommate else "No" }}</td>
+                                            <td>{{ student.room }}</td>
+                                            <td>{{ student.nationality }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="no-requests">No students in this house yet.</p>
+                    {% endif %}
+                </details>
+            {% endfor %}
+
+            {% for house, house_students in students_by_house.items() %}
+                {% if house not in boarding_houses %}
+                    <details class="student-house">
+                        <summary>
+                            <span>{{ house }}</span>
+                            <span class="request-count">{{ house_students|length }} students</span>
+                        </summary>
+                        <div class="heater-history student-list">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th><th>Username</th><th>Year</th><th>Age</th><th>Roommate</th>
+                                        <th>Room</th><th>Nationality</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in house_students %}
+                                        <tr>
+                                            <td>{{ student.full_name or student.username }}</td>
+                                            <td>{{ student.username }}</td>
+                                            <td>{{ student.year_group }}</td>
+                                            <td>{{ student.age }}</td>
+                                            <td>{{ "Yes" if student.has_roommate else "No" }}</td>
+                                            <td>{{ student.room }}</td>
+                                            <td>{{ student.nationality }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

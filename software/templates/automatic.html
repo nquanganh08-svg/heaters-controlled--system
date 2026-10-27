@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Automatic Heater Control{% endblock %}
+
+{% block content %}
+<section class="graphs-page" aria-labelledby="automatic-title">
+    <header class="graphs-header">
+        <div>
+            <p class="eyebrow">HEATER CONTROL</p>
+            <h1 id="automatic-title">Automatic</h1>
+            <p class="graphs-description">
+                On below {{ settings.turn_on_below }} °C · Off above {{ settings.turn_off_above }} °C
+            </p>
+        </div>
+        <div class="live-indicator"><span aria-hidden="true"></span> Automatic mode</div>
+    </header>
+
+    <nav class="mode-tabs" aria-label="Automatic mode pages">
+        <a class="mode-tab mode-tab-active" href="#automatic-overview">Automatic</a>
+        <a class="mode-tab" href="#heater-history">History</a>
+        <a class="mode-tab mode-tab-settings" href="{{ url_for('heater_mode') }}">Mode settings</a>
+    </nav>
+
+    <div id="automatic-overview">
+        <p class="graphs-status" id="automatic-status" role="status" aria-live="polite">
+            Loading temperature and heater history...
+        </p>
+        <p class="graphs-error" id="automatic-error" role="alert" hidden></p>
+
+        <div class="chart-grid automatic-chart-grid">
+            <article class="chart-card">
+                <h2>Temperature (°C)</h2>
+                <div class="chart-canvas-wrap">
+                    <canvas id="automatic-temperature-chart"
+                            aria-label="Temperature readings over time" role="img"></canvas>
+                </div>
+            </article>
+            <article class="chart-card">
+                <h2>Heater status</h2>
+                <div class="chart-canvas-wrap">
+                    <canvas id="automatic-heater-chart"
+                            aria-label="Heater on and off history" role="img"></canvas>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <section class="automatic-history-section" id="heater-history"
+             aria-labelledby="heater-history-title">
+        <div class="admin-requests-heading">
+            <div>
+                <p class="eyebrow">COMMAND HISTORY</p>
+                <h2 id="heater-history-title">Heater history</h2>
+            </div>
+            <span class="request-count">Latest {{ history|length }} commands</span>
+        </div>
+        {% if history %}
+            <div class="heater-history">
+                <table>
+                    <thead>
+                        <tr><th>State</th><th>Source / user</th><th>When</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for command in history %}
+                            <tr>
+                                <td>{{ command.state|capitalize }}</td>
+                                <td>
+                                    {% if command.username == "automatic" %}
+                                        Automatic control
+                                    {% else %}
+                                        {{ command.username }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ command.created_at }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-requests">No successful heater changes have been recorded yet.</p>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js" defer></script>
+<script>
+    window.automaticTurnOnBelow = {{ settings.turn_on_below|tojson }};
+    window.automaticTurnOffAbove = {{ settings.turn_off_above|tojson }};
+</script>
+<script src="{{ url_for('static', filename='automatic.js') }}" defer></script>
+{% endblock %}

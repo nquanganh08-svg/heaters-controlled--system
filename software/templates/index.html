@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Home | Live Data Dashboard{% endblock %}
+
+{% block content %}
+<div class="home-page">
+    <section class="home-hero" aria-labelledby="home-title">
+        <div class="home-hero-copy">
+            <p class="eyebrow">BOSWORTH INDEPENDENT SCHOOL · SENSOR DASHBOARD</p>
+            <h1 id="home-title">Welcome back, {{ session.get("username") }}.</h1>
+            <p class="home-intro">
+                Keep an eye on your heater environment with live temperature
+                and humidity readings, all in one place.
+            </p>
+            <a class="home-button" href="{{ url_for('graphs') }}">
+                Explore live graphs <span aria-hidden="true">→</span>
+            </a>
+        </div>
+
+        <aside class="home-live-panel" aria-label="Live monitoring overview">
+            <div class="home-live-heading">
+                <span class="home-live-dot" aria-hidden="true"></span>
+                <span>Monitoring overview</span>
+            </div>
+            <p class="home-measurement-count">02</p>
+            <p class="home-measurement-label">environmental measurements</p>
+            <div class="home-measurements">
+                <span>Temperature <strong>°C</strong></span>
+                <span>Humidity <strong>%</strong></span>
+            </div>
+            <p class="home-refresh-note">Charts refresh automatically every 15 seconds.</p>
+        </aside>
+        <div class="home-hero-orb home-hero-orb-one" aria-hidden="true"></div>
+        <div class="home-hero-orb home-hero-orb-two" aria-hidden="true"></div>
+    </section>
+
+    <section class="home-section" aria-labelledby="monitoring-title">
+        <div class="home-section-heading">
+            <div>
+                <p class="home-section-kicker">YOUR DASHBOARD</p>
+                <h2 id="monitoring-title">Monitor what matters</h2>
+            </div>
+            <p>See recent sensor readings and follow changes over time.</p>
+        </div>
+
+        <div class="home-feature-grid">
+            <a class="home-feature-card" href="{{ url_for('graphs') }}">
+                <span class="home-feature-icon temperature-icon" aria-hidden="true">°</span>
+                <span class="home-feature-label">LIVE MEASUREMENT</span>
+                <h3>Temperature</h3>
+                <p>Follow heater temperature readings and spot changes in the live chart.</p>
+                <span class="home-card-link">View temperature graph <span aria-hidden="true">→</span></span>
+            </a>
+
+            <a class="home-feature-card" href="{{ url_for('graphs') }}">
+                <span class="home-feature-icon humidity-icon" aria-hidden="true">%</span>
+                <span class="home-feature-label">LIVE MEASUREMENT</span>
+                <h3>Humidity</h3>
+                <p>Review humidity readings alongside their recent history.</p>
+                <span class="home-card-link">View humidity graph <span aria-hidden="true">→</span></span>
+            </a>
+
+            <article class="home-feature-card home-info-card">
+                <span class="home-feature-icon overview-icon" aria-hidden="true">↗</span>
+                <span class="home-feature-label">QUICK GUIDE</span>
+                <h3>Using your dashboard</h3>
+                <p>Open the graphs to explore recent readings. The charts update automatically while the page is open.</p>
+                <span class="home-card-note">Live data · Clear trends · One place</span>
+            </article>
+        </div>
+    </section>
+
+    <footer class="home-footer">
+        <span class="home-footer-mark" aria-hidden="true"></span>
+        <p>Thoughtful monitoring for a comfortable learning environment.</p>
+        <a href="{{ url_for('graphs') }}">Go to graphs <span aria-hidden="true">→</span></a>
+    </footer>
+</div>
+{% endblock %}

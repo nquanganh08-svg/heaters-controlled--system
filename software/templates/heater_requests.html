@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Heater Requests{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <section class="admin-requests" aria-labelledby="heater-request-title">
+        <div class="admin-requests-heading">
+            <div>
+                <p class="eyebrow">STUDENT SERVICES</p>
+                <h1 id="heater-request-title">Request the heater</h1>
+            </div>
+        </div>
+
+        <p class="heater-request-intro">
+            Send a request to the administrators. If approved, the heater will be turned on.
+        </p>
+
+        {% if has_pending_request %}
+            <p class="heater-request-pending" role="status">
+                Your request is waiting for an administrator to review it.
+            </p>
+        {% else %}
+            <form class="heater-student-request-form" method="POST"
+                  action="{{ url_for('student_heater_requests') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="login-field">
+                    <label for="heater-request-reason">Why do you need the heater?</label>
+                    <textarea id="heater-request-reason" name="reason" rows="4"
+                              maxlength="500" required></textarea>
+                </div>
+                <button class="request-approve student-create-button" type="submit">
+                    Send heater request
+                </button>
+            </form>
+        {% endif %}
+    </section>
+
+    <section class="admin-requests" aria-labelledby="heater-request-history-title">
+        <div class="admin-requests-heading">
+            <div>
+                <p class="eyebrow">YOUR REQUESTS</p>
+                <h2 id="heater-request-history-title">Request history</h2>
+            </div>
+        </div>
+        {% if heater_requests %}
+            <div class="heater-request-history">
+                {% for heater_request in heater_requests %}
+                    <article class="heater-request-history-card">
+                        <div class="heater-request-history-heading">
+                            <strong>{{ heater_request.status|capitalize }}</strong>
+                            <span>{{ heater_request.created_at }}</span>
+                        </div>
+                        <p class="request-reason">{{ heater_request.reason }}</p>
+                        {% if heater_request.admin_comment %}
+                            <div class="heater-admin-comment">
+                                <strong>Administrator comment</strong>
+                                <p>{{ heater_request.admin_comment }}</p>
+                            </div>
+                        {% elif heater_request.status == "pending" %}
+                            <p class="request-date">Waiting for administrator feedback.</p>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-requests">You have not sent any heater requests yet.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
