@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Student Account Created{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <section class="admin-requests student-credentials" aria-labelledby="account-created-title">
+        <p class="eyebrow">STUDENT ACCOUNT CREATED</p>
+        <h1 id="account-created-title">{{ full_name }}</h1>
+        <p>Copy these sign-in details and give them to the student. The generated password will not be shown again.</p>
+
+        <dl class="student-credential-list">
+            <div>
+                <dt>Username</dt>
+                <dd><code>{{ username }}</code></dd>
+            </div>
+            <div>
+                <dt>Temporary password</dt>
+                <dd><code>{{ password }}</code></dd>
+            </div>
+        </dl>
+
+        <a class="button button-primary" href="{{ url_for('students') }}">Back to students</a>
+    </section>
+</div>
+{% endblock %}

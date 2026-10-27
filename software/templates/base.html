@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Live Data Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    {% block navigation %}
+    <nav class="site-nav">
+    <a class="site-brand" href="{{ url_for('dashboard') }}">
+        <img src="{{ url_for('static', filename='bosworth-logo.png') }}"
+             alt="Bosworth Independent School">
+    </a>
+
+    <div class="nav-links">
+        <a href="{{ url_for('dashboard') }}">Home</a>
+        <a href="{{ url_for('graphs') }}">Graphs</a>
+        {% if session.get("is_admin", session.get("logged_in")) %}
+            <a href="{{ url_for('admin') }}">Admin</a>
+            <a href="{{ url_for('students') }}">Students</a>
+            <a href="{{ url_for('heater_mode') }}">Mode</a>
+        {% elif session.get("logged_in") %}
+            <a href="{{ url_for('student_heater_requests') }}">Heater requests</a>
+        {% endif %}
+    </div>
+
+    <div class="nav-account">
+        {% if session.get("logged_in") %}
+            <span>Logged in as {{ session.get("username") }}</span>
+            <a class="logout-button" href="{{ url_for('logout') }}">Log out</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login</a>
+        {% endif %}
+    </div>
+</nav>
+    {% endblock %}
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages" aria-live="polite">
+                    {% for category, message in messages %}
+                        <p class="flash-message flash-{{ category }}" role="status">
+                            {{ message }}
+                        </p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

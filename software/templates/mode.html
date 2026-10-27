@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Heater Mode{% endblock %}
+
+{% block content %}
+<div class="graphs-page">
+    <header class="graphs-header">
+        <div>
+            <p class="eyebrow">HEATER CONTROL</p>
+            <h1>Mode</h1>
+            <p class="graphs-description">Choose how the heater is controlled.</p>
+        </div>
+    </header>
+
+    <section class="admin-requests" aria-labelledby="mode-title">
+        <div class="admin-requests-heading">
+            <div>
+                <p class="eyebrow">CONTROL MODE</p>
+                <h2 id="mode-title">Select a mode</h2>
+            </div>
+            <span class="request-count">Current: {{ settings.mode|capitalize }}</span>
+        </div>
+
+        <form class="heater-mode-form" method="POST" action="{{ url_for('heater_mode') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="mode-threshold-grid">
+                <div class="login-field">
+                    <label for="turn_on_below">Turn heater on below (°C)</label>
+                    <input id="turn_on_below" name="turn_on_below" type="number"
+                           min="-50" max="60" step="0.1"
+                           value="{{ settings.turn_on_below }}" required>
+                </div>
+                <div class="login-field">
+                    <label for="turn_off_above">Turn heater off above (°C)</label>
+                    <input id="turn_off_above" name="turn_off_above" type="number"
+                           min="-50" max="60" step="0.1"
+                           value="{{ settings.turn_off_above }}" required>
+                </div>
+            </div>
+            <p class="mode-threshold-note">
+                The heater turns on below the first threshold and turns off above the second.
+                Keep the off threshold higher to prevent frequent switching.
+            </p>
+            <div class="heater-actions mode-actions">
+                <button class="mode-select-button {% if settings.mode == 'manual' %}mode-selected{% endif %}"
+                        type="submit" name="mode" value="manual">Manual</button>
+                <button class="mode-select-button {% if settings.mode == 'automatic' %}mode-selected{% endif %}"
+                        type="submit" name="mode" value="automatic">Automatic</button>
+            </div>
+        </form>
+
+        {% if settings.mode == "automatic" %}
+            <nav class="mode-tabs" aria-label="Automatic mode pages">
+                <a class="mode-tab mode-tab-active" href="{{ url_for('automatic_mode') }}">Automatic</a>
+                <a class="mode-tab" href="{{ url_for('automatic_mode') }}#heater-history">History</a>
+            </nav>
+            <p class="heater-request-pending">
+                Automatic control is active. The server checks the sensor every
+                {{ automatic_interval }} seconds.
+            </p>
+        {% else %}
+            <p class="mode-manual-note">Manual mode is active. Use the heater controls on the Admin page.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
